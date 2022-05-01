@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 
-async function scrape(url, fileName) {
+async function scrape() {
     //Create a new browser instance
     const browser = await puppeteer.launch();
 
@@ -21,14 +21,14 @@ async function scrape(url, fileName) {
     await page.click("#nav-search-submit-button");
 
     //Wait for the page to load
-    await page.waitForSelector(
-    'div'
-    );
+    await page.waitForSelector("div");
 
     //Get all the divs from the articles
     let divs = await page.$$('div[class="a-section a-spacing-base"] > div');
     if (divs.length <= 2) {
-    divs = await page.$$('div[class="sg-col-4-of-12 s-result-item s-asin sg-col-4-of-16 AdHolder sg-col s-widget-spacing-small sg-col-4-of-20"] > div');
+        divs = await page.$$(
+            'div[class="sg-col-4-of-12 s-result-item s-asin sg-col-4-of-16 AdHolder sg-col s-widget-spacing-small sg-col-4-of-20"] > div'
+        );
     }
 
     const articles = [];
@@ -36,17 +36,26 @@ async function scrape(url, fileName) {
     //Iterate over the divs and build the articles array
     for (const div of divs) {
         try {
-            const title = await div.$eval('h2', (element) => element.innerText);
-            const url = await div.$eval("a[class='a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal']", (element) => element.href);
-            let price = await div.$eval("span[class='a-price-whole']", (element) => element.innerText);
-            const decimals = await div.$eval("span[class='a-price-fraction']", (element) => element.innerText);
+            const title = await div.$eval("h2", (element) => element.innerText);
+            const url = await div.$eval(
+                "a[class='a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal']",
+                (element) => element.href
+            );
+            let price = await div.$eval(
+                "span[class='a-price-whole']",
+                (element) => element.innerText
+            );
+            const decimals = await div.$eval(
+                "span[class='a-price-fraction']",
+                (element) => element.innerText
+            );
 
             price = price.replace("\n", "") + decimals;
 
             const article = {
-            title,
-            url,
-            price,
+                title,
+                url,
+                price,
             };
 
             articles.push(article);
@@ -56,8 +65,8 @@ async function scrape(url, fileName) {
             console.log("error: ", err);
         }
     }
-    
-    fs.writeFile('microphones.json', JSON.stringify(articles), (err) => {
+
+    fs.writeFile("microphones.json", JSON.stringify(articles), (err) => {
         if (err) throw err;
     });
 }
