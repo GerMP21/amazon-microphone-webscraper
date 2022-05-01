@@ -22,17 +22,13 @@ async function scrape(url, fileName) {
 
     //Wait for the page to load
     await page.waitForSelector(
-    'div[class="s-result-list s-search-results sg-row"]'
+    'div'
     );
 
     //Get all the divs from the articles
-    let divs = await page.$$(
-    'div[class="s-result-list s-search-results sg-row"] > div'
-    );
+    let divs = await page.$$('div[class="a-section a-spacing-base"] > div');
     if (divs.length <= 2) {
-    divs = await page.$$(
-        'div[class="s-main-slot s-result-list s-search-results sg-row"] > div'
-    );
+    divs = await page.$$('div[class="sg-col-4-of-12 s-result-item s-asin sg-col-4-of-16 AdHolder sg-col s-widget-spacing-small sg-col-4-of-20"] > div');
     }
 
     const articles = [];
@@ -40,8 +36,8 @@ async function scrape(url, fileName) {
     //Iterate over the divs and build the articles array
     for (const div of divs) {
         try {
-            const title = await div.$eval("span[class=a-size-base a-color-base a-text-normal", (element) => element.innerText);
-            const url = await div.$eval("a", (element) => element.href);
+            const title = await div.$eval('h2', (element) => element.innerText);
+            const url = await div.$eval("a[class='a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal']", (element) => element.href);
             let price = await div.$eval("span[class='a-price-whole']", (element) => element.innerText);
             const decimals = await div.$eval("span[class='a-price-fraction']", (element) => element.innerText);
 
@@ -54,6 +50,7 @@ async function scrape(url, fileName) {
             };
 
             articles.push(article);
+            //console.log(article);
         } catch (err) {
             // this occurs if any of the tags (h2, img, span) was not found
             console.log("error: ", err);
